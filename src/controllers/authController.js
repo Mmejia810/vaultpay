@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const  pool = require('../config/database');
 const jwt = require('jsonwebtoken');
-
+const { createaccount } = require('./accountController')
 
 const register = async (req, res) => {
     const { nombre , apellido, identificacion, telefono , correo, direccion, password } = req.body
@@ -14,7 +14,10 @@ const register = async (req, res) => {
             'INSERT INTO users (nombre, apellido, identificacion, telefono, correo, direccion, password) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
             [nombre , apellido, identificacion, telefono , correo, direccion, hashedPassword]
         )
-        res.status(201).json({ message: 'Usuario registrado exitosamente', userId: result.rows[0].id })
+        // Crear cuenta para el nuevo usuario
+        const accountId = await createaccount(result.rows[0].id, 'savings', 0)
+        res.status(201).json({ message: 'Usuario registrado exitosamente', userId: result.rows[0].id, accountId })
+        
     } catch (error) {
         console.error('Error al registrar usuario:', error)
         res.status(500).json({ message: 'Error al registrar usuario' })
