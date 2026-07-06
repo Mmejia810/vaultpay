@@ -25,7 +25,29 @@ const getAccountByUserId = async (userId) => {
     }
 }
 
+const getbalance = async (req, res) => {
+    const userId = req.user.userId
+    const account = await getAccountByUserId(userId)
+    if (!account) {
+        return res.status(404).json({ message: 'Cuenta no encontrada' })
+    }
+    res.status(200).json({ balance: account.balance })
+}
+
+
+const updateAccountBalance = async (accountId, newBalance) => {
+    try {
+        await pool.query('UPDATE accounts SET balance = $1 WHERE id = $2', [newBalance, accountId])
+    } catch (error) {
+        console.error('Error al actualizar saldo de cuenta:', error)
+    }
+}
+
+
+
 module.exports = {
     createaccount,
-    getAccountByUserId
+    getAccountByUserId,
+    updateAccountBalance,
+    getbalance
 }
