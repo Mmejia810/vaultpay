@@ -3,6 +3,8 @@ const pool = require('./config/database')
 const cors = require('cors')
 require('dotenv').config();
 const authRoutes = require('./routes/authRoutes')
+const userRoutes = require('./routes/userRoutes')
+
 
 
 
@@ -12,7 +14,7 @@ const PORT = process.env.PORT || 3000
 app.use(cors())
 app.use(express.json())
 app.use('/api/auth', authRoutes)
-
+app.use('/api/user', userRoutes)
 app.get('/', (req, res) => {
   res.json({ message: 'VaultPay API funcionando' })
 })
@@ -29,4 +31,6 @@ app.get('/test-db', async (req, res) => {
     console.error('Error al conectar a la base de datos:', error)
     res.status(500).json({ message: 'Error al conectar a la base de datos' })
   }
+
+
 })
