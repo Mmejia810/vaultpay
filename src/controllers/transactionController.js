@@ -2,11 +2,16 @@ const pool = require('../config/database')
 const { getAccountByUserId, updateAccountBalance } = require('./accountController')
 
 
+
 const transfer = async (req, res) => {
     const { to_acccount_number, amount } = req.body
     const userId = req.user.userId
+ 
+
 
     try {
+        await pool.query('BEGIN')
+
         const fromAccount = await getAccountByUserId(userId)
         if (!fromAccount) {
             return res.status(404).json({ message: 'Cuenta de origen no encontrada' })
@@ -36,12 +41,16 @@ const transfer = async (req, res) => {
             'INSERT INTO transactions (from_account_id, to_account_id, amount) VALUES ($1, $2, $3)',
             [fromAccount.id, toAccount.id, amount]
         )
+        await pool.query('COMMIT')
 
         res.status(200).json({ message: 'Transferencia realizada con éxito' })
     } catch (error) {
         console.error('Error al realizar la transferencia:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
+
+        await pool.query('ROLLBACK')
     }
+    
 }
 
 module.exports = { transfer }
