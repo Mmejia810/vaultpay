@@ -4,7 +4,7 @@ const { getAccountByUserId, updateAccountBalance } = require('./accountControlle
 
 
 const transfer = async (req, res) => {
-    const { to_acccount_number, amount } = req.body
+    const { to_account_number, amount } = req.body
     const userId = req.user.userId
  
 
@@ -20,7 +20,7 @@ const transfer = async (req, res) => {
         if (fromAccount.balance < amount) {
             return res.status(400).json({ message: 'Saldo insuficiente' })
         }
-        const toAccountResult = await pool.query('SELECT * FROM accounts WHERE account_number = $1', [to_acccount_number])
+        const toAccountResult = await pool.query('SELECT * FROM accounts WHERE account_number = $1', [to_account_number])
         const toAccount = toAccountResult.rows[0]
 
         if (!toAccount) {
@@ -30,6 +30,21 @@ const transfer = async (req, res) => {
         if (fromAccount.id === toAccount.id) {
             return res.status(400).json({ message: 'No se puede transferir a la misma cuenta' })
         }
+
+        const dailyResult = await pool.query(
+             `SELECT COALESCE(SUM(amount), 0) as total 
+             FROM transactions 
+             WHERE from_account_id = $1 
+            AND created_at >= CURRENT_DATE
+             AND status = 'completada'`,
+            [fromAccount.id]
+           )
+         const dailyTotal = parseFloat(dailyResult.rows[0].total)
+
+         if (dailyTotal + parseFloat(amount) > 3000000 ) {
+            return res.status(400).json({ message: 'Límite diario de transferencia excedido' })
+        }
+
 
        const newFromBalance = parseFloat(fromAccount.balance) - parseFloat(amount)
         const newToBalance = parseFloat(toAccount.balance) + parseFloat(amount)
@@ -77,4 +92,7 @@ const getTransactionHistory = async (req, res) => {
     
 }
 
-module.exports = { transfer, getTransactionHistory }
+
+
+
+module.exports = { transfer, getTransactionHistory}

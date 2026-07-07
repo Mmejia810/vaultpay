@@ -44,7 +44,7 @@ const validatelogin = [
 
 const validateTransfer = [
 
-    body('to_acccount_number')
+    body('to_account_number')
         .notEmpty().withMessage('El número de cuenta de destino es obligatorio')
         .isLength({ min: 10, max: 10 }).withMessage('El número de cuenta debe tener 10 dígitos')
         .isNumeric().withMessage('El número de cuenta debe ser numérico'),

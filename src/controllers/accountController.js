@@ -2,7 +2,8 @@ const  pool = require('../config/database');
 
 const createaccount = async (userId,accountType, balance) => {
 
-    const accountNumber = Math.floor(Math.random() * 9000000000) + 1000000000
+    const crypto = require('crypto')
+const accountNumber = parseInt(crypto.randomBytes(4).toString('hex'), 16) % 9000000000 + 1000000000
     
     try {
         const result = await pool.query(
