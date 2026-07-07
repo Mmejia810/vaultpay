@@ -5,6 +5,8 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
 const transactionRoutes = require('./routes/transactionRoutes')
+const helmet = require('helmet')
+const rateLimit = require('express-rate-limit')
 
 
 
@@ -12,11 +14,27 @@ const transactionRoutes = require('./routes/transactionRoutes')
 const app = express()
 const PORT = process.env.PORT || 3000
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // Limitar a 100 solicitudes por ventana
+  message: 'Demasiadas solicitudes desde esta IP, por favor intente nuevamente después de 15 minutos'
+})
+
+const authlimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10, // Limitar a 10 solicitudes por ventana
+  message: 'Demasiadas solicitudes de autenticación desde esta IP, por favor intente nuevamente después de 15 minutos'
+})
+
+app.use(limiter)
+app.use(helmet())
 app.use(cors())
 app.use(express.json())
-app.use('/api/auth', authRoutes)
+app.use('/api/auth', authlimiter, authRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/transaction', transactionRoutes)
+
+
 app.get('/', (req, res) => {
   res.json({ message: 'VaultPay API funcionando' })
 })

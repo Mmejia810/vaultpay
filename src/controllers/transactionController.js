@@ -27,6 +27,10 @@ const transfer = async (req, res) => {
             return res.status(404).json({ message: 'Cuenta de destino no encontrada' })
         }
 
+        if (fromAccount.id === toAccount.id) {
+            return res.status(400).json({ message: 'No se puede transferir a la misma cuenta' })
+        }
+
        const newFromBalance = parseFloat(fromAccount.balance) - parseFloat(amount)
         const newToBalance = parseFloat(toAccount.balance) + parseFloat(amount)
 
@@ -38,17 +42,19 @@ const transfer = async (req, res) => {
 
 
         await pool.query(
-            'INSERT INTO transactions (from_account_id, to_account_id, amount) VALUES ($1, $2, $3)',
-            [fromAccount.id, toAccount.id, amount]
+            'INSERT INTO transactions (from_account_id, to_account_id, amount, status) VALUES ($1, $2, $3, $4)',
+            [fromAccount.id, toAccount.id, amount, 'completada']
         )
         await pool.query('COMMIT')
 
         res.status(200).json({ message: 'Transferencia realizada con éxito' })
     } catch (error) {
+
+        await pool.query('ROLLBACK')
         console.error('Error al realizar la transferencia:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
 
-        await pool.query('ROLLBACK')
+        
     }
 
 }
