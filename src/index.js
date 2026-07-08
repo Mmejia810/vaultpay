@@ -5,6 +5,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
 const transactionRoutes = require('./routes/transactionRoutes')
+const keyRoutes = require('./routes/keyRoutes')
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
 
@@ -33,6 +34,7 @@ app.use(express.json())
 app.use('/api/auth', authlimiter, authRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/transaction', transactionRoutes)
+app.use('/api/key', keyRoutes)
 
 
 app.get('/', (req, res) => {
