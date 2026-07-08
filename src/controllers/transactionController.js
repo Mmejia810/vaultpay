@@ -78,12 +78,18 @@ const getTransactionHistory = async (req, res) => {
     const userId = req.user.userId
 
     try {
+
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 10
+        const offset = (page - 1) * limit
+
         const account = await getAccountByUserId(userId)
         const transactions = await pool.query(
-            'SELECT * FROM transactions WHERE from_account_id = $1 OR to_account_id = $1 ORDER BY created_at DESC',
-            [account.id]
+            'SELECT * FROM transactions WHERE from_account_id = $1 OR to_account_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
+            [account.id, limit, offset]
         )
-        res.status(200).json({ transactions: transactions.rows })
+        res.status(200).json({ transactions: transactions.rows , page, limit, total: transactions.rows.length })
+
     } catch (error) {
         console.error('Error al obtener el historial de trans   acciones:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
