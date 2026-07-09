@@ -51,6 +51,78 @@ const createKey = async (req, res) => {
 
 }
 
+const getByKey = async (req, res) => {
+    const { key_value } = req.params
+
+    try {
+        const keyResult = await pool.query(
+            'SELECT * FROM keys WHERE key_value = $1',
+            [key_value]
+        )
+        const key = keyResult.rows[0]
+
+        if (!key) {
+            return res.status(404).json({ message: 'Clave no encontrada' })
+        }
+
+        res.status(200).json({ key })
+    }
+    catch (error) {
+        console.error('Error al obtener la clave:', error)
+        res.status(500).json({ message: 'Error interno del servidor' })
+    }
+}
+
+const getByKeyType = async (req, res) => {
+    const { key_type } = req.params
+
+    try {
+        const keyResult = await pool.query(
+            'SELECT * FROM keys WHERE key_type = $1',
+            [key_type]
+        )
+        const keys = keyResult.rows
+
+        res.status(200).json({ keys })
+    }
+    catch (error) {
+        console.error('Error al obtener las claves por tipo:', error)
+        res.status(500).json({ message: 'Error interno del servidor' })
+    }
+}
+
+const deleteKey = async (req, res) => {
+    const { key_value } = req.params
+    const userId = req.user.userId
+
+    try {
+        const account = await getAccountByUserId(userId)
+        if (!account) {
+            return res.status(404).json({ message: 'Cuenta no encontrada' })
+        }
+        if (!key_value) {
+            return res.status(400).json({ message: 'Faltan parámetros requeridos' })
+        }
+        
+
+        const keyResult = await pool.query(
+            'DELETE FROM keys WHERE key_value = $1 AND account_id = $2 RETURNING *',
+            [key_value, account.id]
+        )
+        const deletedKey = keyResult.rows[0]
+
+        if (!deletedKey) {
+            return res.status(404).json({ message: 'Clave no encontrada o no pertenece a tu cuenta' })
+        }
+
+        res.status(200).json({ message: 'Clave eliminada exitosamente' })
+    }
+    catch (error) {
+        console.error('Error al eliminar la clave:', error)
+        res.status(500).json({ message: 'Error interno del servidor' })
+    }
+}
+
 const transferByKey = async (req, res) => {
     const { key_value, amount } = req.body
     const userId = req.user.userId
@@ -140,6 +212,9 @@ const transferByKey = async (req, res) => {
 
 module.exports = {
     createKey,
+    getByKey,
+    getByKeyType,
+    deleteKey,
     transferByKey
 }
 
