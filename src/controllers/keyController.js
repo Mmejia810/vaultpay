@@ -31,7 +31,7 @@ const createKey = async (req, res) => {
                 'SELECT * FROM keys WHERE key_type = $1 AND key_value = $2',
                 [key_type, key_value]
             )
-        
+
             if (existingKey.rows.length > 0) {
                 return res.status(400).json({ message: 'La clave ya está en uso' })
             }
@@ -103,7 +103,7 @@ const deleteKey = async (req, res) => {
         if (!key_value) {
             return res.status(400).json({ message: 'Faltan parámetros requeridos' })
         }
-        
+
 
         const keyResult = await pool.query(
             'DELETE FROM keys WHERE key_value = $1 AND account_id = $2 RETURNING *',
@@ -145,7 +145,7 @@ const transferByKey = async (req, res) => {
         if (parseFloat(amount) > 3000000) {
             return res.status(400).json({ message: 'El monto excede el límite máximo de transferencia' })
         }
-      
+
 
         const keyResult = await pool.query(
             'SELECT * FROM keys WHERE key_value = $1',
@@ -181,7 +181,7 @@ const transferByKey = async (req, res) => {
         )
         const dailyTotal = parseFloat(dailyResult.rows[0].total)
 
-       const newFromBalance = parseFloat(fromAccount.balance) - parseFloat(amount)
+        const newFromBalance = parseFloat(fromAccount.balance) - parseFloat(amount)
         const newToBalance = parseFloat(toAccount.balance) + parseFloat(amount)
 
         await pool.query('BEGIN')
@@ -192,15 +192,15 @@ const transferByKey = async (req, res) => {
         await pool.query('INSERT INTO transactions (from_account_id, to_account_id, amount, status) VALUES ($1, $2, $3, $4)',
             [fromAccount.id, toAccount.id, amount, 'completada']
 
-            
-    )
 
-    await pool.query('COMMIT')
+        )
 
-    res.status(200).json({ message: 'Transferencia realizada con éxito' })
+        await pool.query('COMMIT')
+
+        res.status(200).json({ message: 'Transferencia realizada con éxito' })
     }
 
-        
+
     catch (error) {
         console.error('Error al realizar la transferencia:', error)
         res.status(500).json({ message: 'Error interno del servidor' })

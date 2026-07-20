@@ -1,10 +1,11 @@
-const  pool = require('../config/database');
+const pool = require('../config/database');
 
-const createaccount = async (userId,accountType, balance) => {
+const createaccount = async (userId, accountType, balance) => {
 
     const crypto = require('crypto')
-const accountNumber = parseInt(crypto.randomBytes(4).toString('hex'), 16) % 9000000000 + 1000000000
-    
+    const accountNumber = parseInt(crypto.randomBytes(4).toString('hex'), 16) % 9000000000 + 1000000000
+
+
     try {
         const result = await pool.query(
             'INSERT INTO accounts (user_id, account_number, account_type, balance) VALUES ($1, $2, $3, $4) RETURNING id',
@@ -12,7 +13,7 @@ const accountNumber = parseInt(crypto.randomBytes(4).toString('hex'), 16) % 9000
         )
         return result.rows[0].id
     }
-    
+
 
     catch (error) {
         console.error('Error al crear cuenta:', error

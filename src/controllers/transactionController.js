@@ -6,7 +6,7 @@ const { getAccountByUserId, updateAccountBalance } = require('./accountControlle
 const transfer = async (req, res) => {
     const { to_account_number, amount } = req.body
     const userId = req.user.userId
- 
+
 
 
     try {
@@ -16,7 +16,7 @@ const transfer = async (req, res) => {
         if (!fromAccount) {
             return res.status(404).json({ message: 'Cuenta de origen no encontrada' })
         }
-       
+
         if (fromAccount.balance < amount) {
             return res.status(400).json({ message: 'Saldo insuficiente' })
         }
@@ -32,21 +32,21 @@ const transfer = async (req, res) => {
         }
 
         const dailyResult = await pool.query(
-             `SELECT COALESCE(SUM(amount), 0) as total 
+            `SELECT COALESCE(SUM(amount), 0) as total 
              FROM transactions 
              WHERE from_account_id = $1 
             AND created_at >= CURRENT_DATE
              AND status = 'completada'`,
             [fromAccount.id]
-           )
-         const dailyTotal = parseFloat(dailyResult.rows[0].total)
+        )
+        const dailyTotal = parseFloat(dailyResult.rows[0].total)
 
-         if (dailyTotal + parseFloat(amount) > 3000000 ) {
+        if (dailyTotal + parseFloat(amount) > 3000000) {
             return res.status(400).json({ message: 'Límite diario de transferencia excedido' })
         }
 
 
-       const newFromBalance = parseFloat(fromAccount.balance) - parseFloat(amount)
+        const newFromBalance = parseFloat(fromAccount.balance) - parseFloat(amount)
         const newToBalance = parseFloat(toAccount.balance) + parseFloat(amount)
 
         // Actualizar la cuenta de origen
@@ -69,7 +69,7 @@ const transfer = async (req, res) => {
         console.error('Error al realizar la transferencia:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
 
-        
+
     }
 
 }
@@ -88,17 +88,17 @@ const getTransactionHistory = async (req, res) => {
             'SELECT * FROM transactions WHERE from_account_id = $1 OR to_account_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
             [account.id, limit, offset]
         )
-        res.status(200).json({ transactions: transactions.rows , page, limit, total: transactions.rows.length })
+        res.status(200).json({ transactions: transactions.rows, page, limit, total: transactions.rows.length })
 
     } catch (error) {
         console.error('Error al obtener el historial de trans   acciones:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
     }
-    
-    
+
+
 }
 
 
 
 
-module.exports = { transfer, getTransactionHistory}
+module.exports = { transfer, getTransactionHistory }

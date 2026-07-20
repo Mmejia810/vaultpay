@@ -60,73 +60,73 @@ const getProfileById = async (req, res) => {
     }
 };
 
-    const changePassword = async (req, res) => {
-        const userId = req.user.userId;
-        const { currentPassword, newPassword } = req.body;
+const changePassword = async (req, res) => {
+    const userId = req.user.userId;
+    const { currentPassword, newPassword } = req.body;
 
-        try {
-            const result = await pool.query('SELECT password, nombre, apellido, correo, identificacion, telefono FROM users WHERE id = $1', [userId]);
-            const user = result.rows[0];
+    try {
+        const result = await pool.query('SELECT password, nombre, apellido, correo, identificacion, telefono FROM users WHERE id = $1', [userId]);
+        const user = result.rows[0];
 
-            if (!user) {
-                return res.status(404).json({ message: 'Usuario no encontrado' });
-            }
-            if (!await bcrypt.compare(currentPassword, user.password)) {
-                return res.status(400).json({ message: 'Contraseña actual incorrecta' });
-            }
-            if (currentPassword === newPassword) {
-                return res.status(400).json({ message: 'La nueva contraseña no puede ser igual a la actual' });
-            }
-            if (newPassword.length < 8) {
-                return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 8 caracteres' });
-            }
-            if (!/[A-Z]/.test(newPassword)) {
-                return res.status(400).json({ message: 'La nueva contraseña debe contener al menos una letra mayúscula' });
-            }
-            if (!/[a-z]/.test(newPassword)) {
-                return res.status(400).json({ message: 'La nueva contraseña debe contener al menos una letra minúscula' });
-            }
-            if (!/[0-9]/.test(newPassword)) {
-                return res.status(400).json({ message: 'La nueva contraseña debe contener al menos un número' });
-            }
-            if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
-                return res.status(400).json({ message: 'La nueva contraseña debe contener al menos un carácter especial' });
-            }
-            if (/\s/.test(newPassword)) {
-                return res.status(400).json({ message: 'La nueva contraseña no puede contener espacios' });
-            }
-            if (/(.)\1{2,}/.test(newPassword)) {
-                return res.status(400).json({ message: 'La nueva contraseña no puede contener más de dos caracteres consecutivos iguales' });
-            }
-            if (newPassword.toLowerCase().includes(user.correo.toLowerCase())) {
-                return res.status(400).json({ message: 'La nueva contraseña no puede contener tu correo electrónico' });
-            }
-            if (newPassword.toLowerCase().includes(user.nombre.toLowerCase())) {
-                return res.status(400).json({ message: 'La nueva contraseña no puede contener tu nombre' });
-            }
-            if (newPassword.toLowerCase().includes(user.apellido.toLowerCase())) {
-                return res.status(400).json({ message: 'La nueva contraseña no puede contener tu apellido' });
-            }
-            
-            if (newPassword.toLowerCase().includes(String(user.identificacion).toLowerCase())) {
-                return res.status(400).json({ message: 'La nueva contraseña no puede contener tu identificación' });
-            }
-            if (newPassword.toLowerCase().includes(String(user.telefono).toLowerCase())) {
-                return res.status(400).json({ message: 'La nueva contraseña no puede contener tu teléfono' });
-            }
-
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, userId]);
-            res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+        if (!await bcrypt.compare(currentPassword, user.password)) {
+            return res.status(400).json({ message: 'Contraseña actual incorrecta' });
+        }
+        if (currentPassword === newPassword) {
+            return res.status(400).json({ message: 'La nueva contraseña no puede ser igual a la actual' });
+        }
+        if (newPassword.length < 8) {
+            return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 8 caracteres' });
+        }
+        if (!/[A-Z]/.test(newPassword)) {
+            return res.status(400).json({ message: 'La nueva contraseña debe contener al menos una letra mayúscula' });
+        }
+        if (!/[a-z]/.test(newPassword)) {
+            return res.status(400).json({ message: 'La nueva contraseña debe contener al menos una letra minúscula' });
+        }
+        if (!/[0-9]/.test(newPassword)) {
+            return res.status(400).json({ message: 'La nueva contraseña debe contener al menos un número' });
+        }
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
+            return res.status(400).json({ message: 'La nueva contraseña debe contener al menos un carácter especial' });
+        }
+        if (/\s/.test(newPassword)) {
+            return res.status(400).json({ message: 'La nueva contraseña no puede contener espacios' });
+        }
+        if (/(.)\1{2,}/.test(newPassword)) {
+            return res.status(400).json({ message: 'La nueva contraseña no puede contener más de dos caracteres consecutivos iguales' });
+        }
+        if (newPassword.toLowerCase().includes(user.correo.toLowerCase())) {
+            return res.status(400).json({ message: 'La nueva contraseña no puede contener tu correo electrónico' });
+        }
+        if (newPassword.toLowerCase().includes(user.nombre.toLowerCase())) {
+            return res.status(400).json({ message: 'La nueva contraseña no puede contener tu nombre' });
+        }
+        if (newPassword.toLowerCase().includes(user.apellido.toLowerCase())) {
+            return res.status(400).json({ message: 'La nueva contraseña no puede contener tu apellido' });
         }
 
-        catch (error) {
-            console.error('Error al cambiar la contraseña:', error);
-            res.status(500).json({ message: 'Error al cambiar la contraseña' });
+        if (newPassword.toLowerCase().includes(String(user.identificacion).toLowerCase())) {
+            return res.status(400).json({ message: 'La nueva contraseña no puede contener tu identificación' });
+        }
+        if (newPassword.toLowerCase().includes(String(user.telefono).toLowerCase())) {
+            return res.status(400).json({ message: 'La nueva contraseña no puede contener tu teléfono' });
         }
 
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, userId]);
+        res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+    }
 
-    };
+    catch (error) {
+        console.error('Error al cambiar la contraseña:', error);
+        res.status(500).json({ message: 'Error al cambiar la contraseña' });
+    }
+
+
+};
 
 
 module.exports = { getProfile, updateProfile, deleteProfile, getProfileById, changePassword };
