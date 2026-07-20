@@ -7,6 +7,7 @@ const getBalance = accountController.getbalance;
 const updateProfile = userController.updateProfile;
 const deleteProfile = userController.deleteProfile;
 const getProfileById = userController.getProfileById;
+const changePassword = userController.changePassword;
 
 
 
@@ -17,4 +18,5 @@ router.get('/balance', authenticateToken, getBalance);
 router.put('/profile', authenticateToken, updateProfile);
 router.delete('/profile', authenticateToken, deleteProfile);
 router.get('/profile/:id', authenticateToken, getProfileById);
+router.put('/change-password', authenticateToken, changePassword);
 module.exports = router;

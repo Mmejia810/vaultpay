@@ -11,7 +11,10 @@ const accountNumber = parseInt(crypto.randomBytes(4).toString('hex'), 16) % 9000
             [userId, accountNumber, accountType, balance]
         )
         return result.rows[0].id
-    } catch (error) {
+    }
+    
+
+    catch (error) {
         console.error('Error al crear cuenta:', error
         )
     }
