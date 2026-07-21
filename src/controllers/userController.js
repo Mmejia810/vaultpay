@@ -14,6 +14,7 @@ const getProfile = async (req, res) => {
     }
 };
 
+
 const updateProfile = async (req, res) => {
     const userId = req.user.userId;
     const { nombre, apellido, telefono, direccion } = req.body;
@@ -127,6 +128,7 @@ const changePassword = async (req, res) => {
 
 
 };
+
 
 
 module.exports = { getProfile, updateProfile, deleteProfile, getProfileById, changePassword };

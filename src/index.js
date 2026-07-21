@@ -8,6 +8,7 @@ const transactionRoutes = require('./routes/transactionRoutes')
 const keyRoutes = require('./routes/keyRoutes')
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
+const { swaggerUi, swaggerSpec } = require('./config/swagger')
 
 
 
@@ -28,13 +29,14 @@ const authlimiter = rateLimit({
 })
 
 app.use(limiter)
-app.use(helmet())
+app.use(helmet({contentSecurityPolicy: false}))
 app.use(cors())
 app.use(express.json())
 app.use('/api/auth', authlimiter, authRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/transaction', transactionRoutes)
 app.use('/api/key', keyRoutes)
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 
 app.get('/', (req, res) => {
