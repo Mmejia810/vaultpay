@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
+const { auditLog } = require('../middlewares/auditLogger');
 
 const getProfile = async (req, res) => {
     const userId = req.user.userId;
@@ -7,9 +8,11 @@ const getProfile = async (req, res) => {
     try {
         const result = await pool.query('SELECT id, nombre, apellido, identificacion, telefono, correo, direccion FROM users WHERE id = $1 ', [userId]);
         const user = result.rows[0];
+        await auditLog(userId, 'Obtener perfil', req.ip, 'exitoso');
         res.status(200).json(user);
     } catch (error) {
         console.error('Error al obtener el perfil:', error);
+        await auditLog(null, 'Obtener perfil', req.ip, 'fallido');
         res.status(500).json({ message: 'Error al obtener el perfil' });
     }
 };
@@ -25,8 +28,11 @@ const updateProfile = async (req, res) => {
             [nombre, apellido, telefono, direccion, userId]
         );
         const updatedUser = result.rows[0];
+
+        await auditLog(userId, 'Actualizar perfil', req.ip, 'exitoso');
         res.status(200).json(updatedUser);
     } catch (error) {
+        await auditLog(null, 'Actualizar perfil', req.ip, 'fallido');
         console.error('Error al actualizar el perfil:', error);
         res.status(500).json({ message: 'Error al actualizar el perfil' });
     }
@@ -36,10 +42,12 @@ const deleteProfile = async (req, res) => {
     const userId = req.user.userId;
     try {
         await pool.query('UPDATE users SET deletion_requested_at = NOW() WHERE id = $1', [userId]);
+        await auditLog(userId, 'Eliminar perfil', req.ip, 'exitoso');
         res.status(200).json({ message: 'Tu cuenta será eliminada en 10 días' });
     }
 
     catch (error) {
+        await auditLog(null, 'Eliminar perfil', req.ip, 'fallido');
         console.error('Error al eliminar el perfil:', error);
         res.status(500).json({ message: 'Error al eliminar el perfil' });
     }
@@ -53,9 +61,11 @@ const getProfileById = async (req, res) => {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
         const user = result.rows[0];
+        await auditLog(userId, 'Obtener perfil por ID', req.ip, 'exitoso');
         res.status(200).json(user);
     }
     catch (error) {
+        await auditLog(null, 'Obtener perfil por ID', req.ip, 'fallido');
         console.error('Error al obtener el perfil por ID:', error);
         res.status(500).json({ message: 'Error al obtener el perfil por ID' });
     }
@@ -118,11 +128,13 @@ const changePassword = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, userId]);
+        await auditLog(userId, 'Cambiar contraseña', req.ip, 'exitoso');
         res.status(200).json({ message: 'Contraseña actualizada correctamente' });
     }
 
     catch (error) {
         console.error('Error al cambiar la contraseña:', error);
+        await auditLog(null, 'Cambiar contraseña', req.ip, 'fallido');
         res.status(500).json({ message: 'Error al cambiar la contraseña' });
     }
 

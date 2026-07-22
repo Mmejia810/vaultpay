@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const pool = require("../config/database");
 const jwt = require("jsonwebtoken");
 const { createaccount } = require("./accountController");
+const { auditLog } = require("../middlewares/auditLogger");
 
 const register = async (req, res) => {
     const {
@@ -162,6 +163,7 @@ const register = async (req, res) => {
                 fecha_nacimiento,
             ],
         );
+        await auditLog(result.rows[0].id, 'REGISTRO_EXITOSAMENTE', req.ip, 'exitoso');
 
         // Crear cuenta para el nuevo usuario
         const accountId = await createaccount(result.rows[0].id, "savings", 0);
@@ -173,6 +175,7 @@ const register = async (req, res) => {
                 accountId,
             });
     } catch (error) {
+        await auditLog(null, 'REGISTRO_FALLIDO', req.ip, 'fallido');
         console.error("Error al registrar usuario:", error);
         res.status(500).json({ message: "Error al registrar usuario" });
     }
@@ -201,8 +204,11 @@ const login = async (req, res) => {
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
             expiresIn: "1h",
         });
+        await auditLog(user.id, "login", req.ip, 'exitoso');
         res.status(200).json({ message: "Login exitoso", userId: user.id, token });
+
     } catch (error) {
+        await auditLog(null, 'LOGIN_FALLIDO', req.ip, 'fallido')
         console.error("Error al iniciar sesión:", error);
         res.status(500).json({ message: "Error al iniciar sesión" });
     }

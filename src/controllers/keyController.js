@@ -1,6 +1,7 @@
 const pool = require('../config/database')
 const getAccountByUserId = require('../controllers/accountController').getAccountByUserId
 const updateAccountBalance = require('../controllers/accountController').updateAccountBalance
+const { auditLog } = require("../middlewares/auditLogger");
 
 
 const createKey = async (req, res) => {
@@ -42,9 +43,12 @@ const createKey = async (req, res) => {
             [account.id, key_type, key_value]
         )
 
+        await auditLog(userId, 'Crear clave', req.ip, 'exitosa');
+
         res.status(201).json({ message: 'Clave creada exitosamente' })
     }
     catch (error) {
+        await auditLog(userId, 'Crear clave', req.ip, 'fallida');
         console.error('Error al crear la clave:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
     }
@@ -64,10 +68,12 @@ const getByKey = async (req, res) => {
         if (!key) {
             return res.status(404).json({ message: 'Clave no encontrada' })
         }
+        await auditLog(null, 'Obtener clave', req.ip, 'exitosa');
 
         res.status(200).json({ key })
     }
     catch (error) {
+        await auditLog(null, 'Obtener clave', req.ip, 'fallida');
         console.error('Error al obtener la clave:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
     }
@@ -82,10 +88,12 @@ const getByKeyType = async (req, res) => {
             [key_type]
         )
         const keys = keyResult.rows
+        await auditLog(null, 'Obtener claves por tipo', req.ip, 'exitosa');
 
         res.status(200).json({ keys })
     }
     catch (error) {
+        await auditLog(null, 'Obtener claves por tipo', req.ip, 'fallida');
         console.error('Error al obtener las claves por tipo:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
     }
@@ -114,10 +122,12 @@ const deleteKey = async (req, res) => {
         if (!deletedKey) {
             return res.status(404).json({ message: 'Clave no encontrada o no pertenece a tu cuenta' })
         }
+        await auditLog(userId, 'Eliminar clave', req.ip, 'exitosa');
 
         res.status(200).json({ message: 'Clave eliminada exitosamente' })
     }
     catch (error) {
+        await auditLog(null, 'Eliminar clave', req.ip, 'fallida');
         console.error('Error al eliminar la clave:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
     }
@@ -196,12 +206,14 @@ const transferByKey = async (req, res) => {
         )
 
         await pool.query('COMMIT')
+        await auditLog(userId, 'Transferencia por clave', req.ip, 'exitosa');
 
         res.status(200).json({ message: 'Transferencia realizada con éxito' })
     }
 
 
     catch (error) {
+        await auditLog(null, 'Transferencia por clave', req.ip, 'fallida');
         console.error('Error al realizar la transferencia:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
 

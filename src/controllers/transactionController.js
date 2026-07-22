@@ -1,5 +1,6 @@
 const pool = require('../config/database')
 const { getAccountByUserId, updateAccountBalance } = require('./accountController')
+const { auditLog } = require("../middlewares/auditLogger");
 
 
 
@@ -62,9 +63,11 @@ const transfer = async (req, res) => {
         )
         await pool.query('COMMIT')
 
+        await auditLog(userId, 'Transferencia', req.ip, 'exitosa');
+
         res.status(200).json({ message: 'Transferencia realizada con éxito' })
     } catch (error) {
-
+        await auditLog(null, 'Transferencia', req.ip, 'fallida');
         await pool.query('ROLLBACK')
         console.error('Error al realizar la transferencia:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
@@ -88,9 +91,11 @@ const getTransactionHistory = async (req, res) => {
             'SELECT * FROM transactions WHERE from_account_id = $1 OR to_account_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
             [account.id, limit, offset]
         )
+        await auditLog(userId, "Obtener historial de transacciones", req.ip, 'exitosa');
         res.status(200).json({ transactions: transactions.rows, page, limit, total: transactions.rows.length })
 
     } catch (error) {
+        await auditLog(null, 'Obtener historial de transacciones', req.ip, 'fallida');
         console.error('Error al obtener el historial de trans   acciones:', error)
         res.status(500).json({ message: 'Error interno del servidor' })
     }

@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 
+
 const createaccount = async (userId, accountType, balance) => {
 
     const crypto = require('crypto')
@@ -12,6 +13,7 @@ const createaccount = async (userId, accountType, balance) => {
             [userId, accountNumber, accountType, balance]
         )
         return result.rows[0].id
+
     }
 
 
@@ -28,6 +30,7 @@ const getAccountByUserId = async (userId) => {
     } catch (error) {
         console.error('Error al obtener cuenta por ID de usuario:', error)
     }
+
 }
 
 const getbalance = async (req, res) => {
@@ -36,7 +39,10 @@ const getbalance = async (req, res) => {
     if (!account) {
         return res.status(404).json({ message: 'Cuenta no encontrada' })
     }
+
     res.status(200).json({ balance: account.balance })
+
+
 }
 
 
