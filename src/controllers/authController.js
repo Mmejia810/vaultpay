@@ -265,8 +265,30 @@ const refreshToken = async (req, res) => {
 
 };
 
+const logout = async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1]
+
+    if (!token) {
+        return res.status(400).json({ message: 'Token no proporcionado' })
+    }
+
+    try {
+        await pool.query(
+            'INSERT INTO token_blacklist (token) VALUES ($1)',
+            [token]
+        )
+        await auditLog(req.user?.userId, 'logout', req.ip, 'exitoso')
+        res.status(200).json({ message: 'Sesión cerrada exitosamente' })
+    } catch (error) {
+        await auditLog(null, 'LOGOUT_FALLIDO', req.ip, 'fallido')
+        console.error('Error al cerrar sesión:', error)
+        res.status(500).json({ message: 'Error al cerrar sesión' })
+    }
+}
+
 module.exports = {
     register,
     login,
     refreshToken,
+    logout,
 };

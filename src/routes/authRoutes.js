@@ -4,6 +4,9 @@ const valideregister = require('../middlewares/validators').valideregister;
 const validatelogin = require('../middlewares/validators').validatelogin;
 const router = express.Router();
 const refreshToken = require('../controllers/authController').refreshToken
+const logout = require('../controllers/authController').logout
+const { authenticateToken } = require('../middlewares/authMiddleware')
+
 
 /**
  * @swagger
@@ -94,5 +97,19 @@ router.post('/login', validatelogin, authController.login);
  *         description: Error de validación
  */
 router.post('/refreshToken', refreshToken);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Cerrar sesión
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Sesión cerrada exitosamente
+ *       400:
+ *         description: Error de validación
+ */
+router.post('/logout', logout);
 
 module.exports = router;
