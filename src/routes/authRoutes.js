@@ -3,6 +3,7 @@ const authController = require('../controllers/authController');
 const valideregister = require('../middlewares/validators').valideregister;
 const validatelogin = require('../middlewares/validators').validatelogin;
 const router = express.Router();
+const refreshToken = require('../controllers/authController').refreshToken
 
 /**
  * @swagger
@@ -68,5 +69,30 @@ router.post('/register', valideregister, authController.register);
  *         description: Error de validación
  */
 router.post('/login', validatelogin, authController.login);
+
+/**
+ * @swagger
+ * /api/auth/refreshToken:
+ *   post:
+ *     summary: Actualizar token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Token actualizado exitoso
+ *       400:
+ *         description: Error de validación
+ */
+router.post('/refreshToken', refreshToken);
 
 module.exports = router;

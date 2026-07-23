@@ -202,19 +202,71 @@ const login = async (req, res) => {
         }
 
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-            expiresIn: "1h",
+            expiresIn: "15 minutes",
         });
+        const refreshToken = jwt.sign({ userId: user.id }, process.env.REFRESH_TOKEN_SECRET, {
+            expiresIn: "7 days",
+        });
+        await pool.query("INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '7 days') RETURNING id", [
+            user.id,
+            refreshToken,
+        ]);
         await auditLog(user.id, "login", req.ip, 'exitoso');
-        res.status(200).json({ message: "Login exitoso", userId: user.id, token });
+        res.status(200).json({ message: "Login exitoso", userId: user.id, token, refreshToken });
 
     } catch (error) {
         await auditLog(null, 'LOGIN_FALLIDO', req.ip, 'fallido')
         console.error("Error al iniciar sesión:", error);
         res.status(500).json({ message: "Error al iniciar sesión" });
     }
+
+
+};
+
+const refreshToken = async (req, res) => {
+    const { refreshToken } = req.body;
+
+
+
+    try {
+        const result = await pool.query("SELECT * FROM refresh_tokens WHERE token = $1", [
+            refreshToken,
+        ]);
+        const user = result.rows[0];
+
+        if (!user) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        if (new Date(user.expires_at) < new Date()) {
+            return res.status(401).json({ message: 'Refresh token expirado' })
+        }
+
+        if (!user.token) {
+            return res.status(404).json({ message: "Token no encontrado" });
+        }
+
+        if (user.token !== refreshToken) {
+            return res.status(401).json({ message: "Token incorrecto" });
+        }
+
+        const token = jwt.sign({ userId: user.user_id }, process.env.JWT_SECRET, {
+            expiresIn: "15 minutes",
+        });
+
+        await auditLog(user.user_id, "refresh_token", req.ip, 'exitoso');
+        res.status(200).json({ message: "Token actualizado", userId: user.user_id, token });
+
+    } catch (error) {
+        await auditLog(null, 'REFRESH_TOKEN_FALLIDO', req.ip, 'fallido')
+        console.error("Error al actualizar token:", error);
+        res.status(500).json({ message: "Error al actualizar token" });
+    }
+
 };
 
 module.exports = {
     register,
     login,
+    refreshToken,
 };
